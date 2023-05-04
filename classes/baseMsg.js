@@ -6,9 +6,10 @@ class BaseMsg {
   status;
   msg;
 
-  constructor(status, msg) {
+  constructor(status, msg, admin) {
     this.status = status;
     this.msg = msg;
+    this.admin = admin;
   }
 }
 

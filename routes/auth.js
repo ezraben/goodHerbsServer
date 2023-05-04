@@ -60,9 +60,16 @@ router.post("/login", async (req, res) => {
 
       if (compareHash) {
         const getToken = await jwt.createToken(email);
+        const admin = userData[0].isAdmin;
+        // console.log("userData", userData[0].isAdmin);
 
-        res.json(new BaseMsg(BaseMsg.STATUSES.Success, getToken));
+        res.json(new BaseMsg(BaseMsg.STATUSES.Success, getToken, admin));
       }
+      // if (compareHash) {
+      //   const getToken = await jwt.createToken(email);
+
+      //   res.json(new BaseMsg(BaseMsg.STATUSES.Success, getToken));
+      // }
       if (!compareHash) {
         throw new BaseMsg(BaseMsg.STATUSES.Failed, "email or password invalid");
       }
