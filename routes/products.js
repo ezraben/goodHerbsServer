@@ -5,6 +5,8 @@ const router = express.Router();
 const productsModel = require("../models/productsModel");
 const productsValidation = require("../validation/productValidation");
 
+const usersModel = require("../models/usersModel");
+
 router.get("/", async (req, res) => {
   try {
     const allProducts = await productsModel.getAllProducts();
@@ -30,8 +32,10 @@ router.get("/findProductById", async (req, res) => {
 router.get("/allProductsByUser", async (req, res) => {
   try {
     const email = req.query;
-    console.log("email", email);
+    // console.log("email", email);
     const productsByUser = await productsModel.getAllProductsByUser(email);
+    console.log("productsByUser", productsByUser);
+
     res.json(productsByUser);
   } catch (err) {
     console.log("err from axios", err);
@@ -39,6 +43,27 @@ router.get("/allProductsByUser", async (req, res) => {
   }
 });
 
+router.delete("/deleteProductsByUserForDelete", async (req, res) => {
+  try {
+    const email = req.query;
+
+    const productsByUser = await productsModel.getAllProductsByUser(email);
+
+    for (let i = 0; i < productsByUser.length; i++) {
+      const idsToDelete = await productsModel.deleteProductsByUser(
+        productsByUser[i]._id
+      );
+    }
+
+    res.json(productsByUser);
+  } catch (err) {
+    console.log("err from axios", err);
+    res.json(err);
+  }
+});
+
+///////////////////////////////
+//befor chnge when you add product to add also email  of user created to array in useres modol
 router.post("/addProduct", async (req, res) => {
   try {
     const validatedValue = await productsValidation.validateProductSchema(
@@ -50,6 +75,7 @@ router.post("/addProduct", async (req, res) => {
         validatedValue.productPrice,
         validatedValue.email
       );
+
       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product add"));
     }
   } catch (err) {
@@ -57,9 +83,6 @@ router.post("/addProduct", async (req, res) => {
     res.json(err);
   }
 });
-
-////////////////////////////
-//before adding email of user to data base to get product by user for dashBord
 // router.post("/addProduct", async (req, res) => {
 //   try {
 //     const validatedValue = await productsValidation.validateProductSchema(
@@ -68,7 +91,8 @@ router.post("/addProduct", async (req, res) => {
 //     if (validatedValue) {
 //       const addProduct = await productsModel.insertProduct(
 //         validatedValue.productName,
-//         validatedValue.productPrice
+//         validatedValue.productPrice,
+//         validatedValue.email
 //       );
 //       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product add"));
 //     }
@@ -78,8 +102,8 @@ router.post("/addProduct", async (req, res) => {
 //   }
 // });
 
-////////////////////////////
-//until here before adding email of user to data base to get product by user for dashBord
+///////////////////////////////
+// until here befor chnge when you add product to add also email  of user created to array in useres modol
 
 router.delete("/removeProduct", async (req, res) => {
   try {
@@ -105,16 +129,23 @@ router.put("/editProduct", async (req, res) => {
     const id = req.query.id;
     const productName = req.query.productName;
     const productPrice = req.query.productPrice;
+    const email = req.query.email;
+    // const id = req.query.id;
+    // const productName = req.query.productName;
+    // const productPrice = req.query.productPrice;
 
+    console.log("req.parms", req.query);
     const validatedValue = await productsValidation.validateProductSchema({
       productName,
       productPrice,
+      email,
     });
     if (validatedValue) {
       const upDatedProduct = await productsModel.editProduct(
         id,
         productName,
-        productPrice
+        productPrice,
+        email
       );
       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product updated"));
     }

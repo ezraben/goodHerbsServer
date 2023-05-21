@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const usersModole = require("../models/usersModel");
+
 const Schema = mongoose.Schema;
 const productsSchema = new Schema({
   productName: { type: String, required: true },
@@ -13,6 +15,11 @@ const getAllProducts = () => {
   const allProducts = Products.find();
   return allProducts;
 };
+const deleteProductsByUser = (_id) => {
+  const productsByUser = Products.findByIdAndDelete(_id);
+
+  return productsByUser;
+};
 
 const getProductById = (id) => {
   const product = Products.findById(id);
@@ -24,19 +31,25 @@ const getAllProductsByUser = (email) => {
   return productsByUser;
 };
 
+///////////////////////////////
+//befor chnge when you add product to add also email  of user created to array in useres modol
 const insertProduct = (productName, productPrice, email) => {
   const product = new Products({ productName, productPrice, email });
+  // console.log("produuuuct", product._id);
+  // const sendIdToUsersMOdole = usersModole.addProductIdToUser(
+  //   product._id,
+  //   email
+  // );
+
   return product.save();
 };
 
-////////////////////////////
-//before adding email of user to data base to get product by user for dashBord
-// const insertProduct = (productName, productPrice) => {
-//   const product = new Products({ productName, productPrice });
+// const insertProduct = (productName, productPrice, email) => {
+//   const product = new Products({ productName, productPrice, email });
 //   return product.save();
 // };
-////////////////////////////
-// until here before adding email of user to data base to get product by user for dashBord
+///////////////////////////////
+//befor chnge when you add product to add also email  of user created to array in useres modol
 
 const removeProduct = (_id) => {
   // const product = Products.findById(_id);
@@ -87,4 +100,5 @@ module.exports = {
   filterProductByMaxPrice,
   filteredProductsByMinPrice,
   searchProductByName,
+  deleteProductsByUser,
 };

@@ -31,6 +31,12 @@ const signUpSchema = Joi.object({
   ...passwordRole,
   ...isAdminRole,
 });
+const editUserSchema = Joi.object({
+  ...firstNameRole,
+  ...lastNameRole,
+  ...emailRole,
+  ...isAdminRole,
+});
 
 const loginSchema = Joi.object({
   ...emailRole,
@@ -44,8 +50,12 @@ const validateSignUpSchema = (data) => {
 const validateLoginSchema = (data) => {
   return loginSchema.validateAsync(data, { abortEarly: false });
 };
+const validateEditUserSchema = (data) => {
+  return editUserSchema.validateAsync(data, { abortEarly: false });
+};
 
 module.exports = {
   validateSignUpSchema,
   validateLoginSchema,
+  validateEditUserSchema,
 };
