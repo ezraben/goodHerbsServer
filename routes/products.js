@@ -73,8 +73,16 @@ router.post("/addProduct", async (req, res) => {
       const addProduct = await productsModel.insertProduct(
         validatedValue.productName,
         validatedValue.productPrice,
+        validatedValue.productQuantity,
         validatedValue.email
       );
+
+      const user = await usersModel.addProductToUsersArr(
+        // validatedValue.email,
+        validatedValue
+      );
+
+      console.log("products", user);
 
       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product add"));
     }
@@ -83,32 +91,37 @@ router.post("/addProduct", async (req, res) => {
     res.json(err);
   }
 });
-// router.post("/addProduct", async (req, res) => {
-//   try {
-//     const validatedValue = await productsValidation.validateProductSchema(
-//       req.body
-//     );
-//     if (validatedValue) {
-//       const addProduct = await productsModel.insertProduct(
-//         validatedValue.productName,
-//         validatedValue.productPrice,
-//         validatedValue.email
-//       );
-//       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product add"));
-//     }
-//   } catch (err) {
-//     console.log("err", err);
-//     res.json(err);
-//   }
-// });
 
-///////////////////////////////
-// until here befor chnge when you add product to add also email  of user created to array in useres modol
+router.put("/decreaseProductQuantity", async (req, res) => {
+  try {
+    const id = req.query.id;
+    const productById = await productsModel.getProductById(id);
+
+    if (productById.productQuantity > 0) {
+      const newProductQuantity = productById.productQuantity - 1;
+
+      const changeProductQuantity = async () => {
+        const upDatedProduct = await productsModel.decreaseProductQuantity(
+          id,
+          newProductQuantity
+        );
+        res.json(productById);
+      };
+      changeProductQuantity();
+    }
+    if (productById.productQuantity <= 0) {
+      res.json(new BaseMsg(BaseMsg.STATUSES.Failed, "Product out stock"));
+    }
+  } catch (err) {
+    console.log("err", err);
+    res.json(err);
+  }
+});
 
 router.delete("/removeProduct", async (req, res) => {
   try {
     const id = req.query.id;
-    // const id = req.body.id;
+
     const idToDelete = await productsModel.removeProduct(id);
 
     if (idToDelete) {
@@ -129,15 +142,14 @@ router.put("/editProduct", async (req, res) => {
     const id = req.query.id;
     const productName = req.query.productName;
     const productPrice = req.query.productPrice;
+    const productQuantity = req.query.productQuantity;
     const email = req.query.email;
-    // const id = req.query.id;
-    // const productName = req.query.productName;
-    // const productPrice = req.query.productPrice;
 
     console.log("req.parms", req.query);
     const validatedValue = await productsValidation.validateProductSchema({
       productName,
       productPrice,
+      productQuantity,
       email,
     });
     if (validatedValue) {
@@ -145,6 +157,7 @@ router.put("/editProduct", async (req, res) => {
         id,
         productName,
         productPrice,
+        productQuantity,
         email
       );
       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "product updated"));
@@ -154,7 +167,7 @@ router.put("/editProduct", async (req, res) => {
     res.json(err);
   }
 });
-// router.put("/editProduct", async (req, res) => {
+
 router.post("/filterProductByMaxPrice", async (req, res) => {
   try {
     const priceToFilter = req.body.price;
@@ -187,6 +200,53 @@ router.post("/searchProductByName", async (req, res) => {
     const products = await productsModel.searchProductByName(productToSearch);
     console.log("productToSearch.length", products.length);
     res.json(products);
+  } catch (err) {
+    console.log("err", err);
+    res.json(err);
+  }
+});
+
+router.put(`/addLikedPropertyByUser`, async (req, res) => {
+  try {
+    const userEmail = req.query.email;
+    const productId = req.query.id;
+    let idExsist;
+
+    const checkIfAlreadyLike = await usersModel.selectUserByMail(userEmail);
+    const likeIdsArrByUser = checkIfAlreadyLike[0].likedProducts;
+
+    const idMap = likeIdsArrByUser.map((arr) => {
+      if (arr == productId) {
+        idExsist = "productLikedAlready";
+      }
+    });
+
+    if (!idExsist) {
+      const addProduct = await usersModel.addLickedProductToUsersArr(
+        userEmail,
+        productId
+      );
+      res.json(addProduct);
+    }
+    if (idExsist) {
+      res.json("you already liked this product");
+    }
+  } catch (err) {
+    console.log("err", err);
+    res.json(err);
+  }
+});
+
+router.put(`/removeLikedProductByUser`, async (req, res) => {
+  try {
+    const userEmail = req.query.email;
+    const productId = req.query.id;
+    const addProduct = await usersModel.removeLickedProductFromUsersArr(
+      userEmail,
+      productId
+    );
+    console.log("addProduct", addProduct);
+    res.json(addProduct);
   } catch (err) {
     console.log("err", err);
     res.json(err);

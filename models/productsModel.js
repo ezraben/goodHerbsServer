@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 const productsSchema = new Schema({
   productName: { type: String, required: true },
   productPrice: { type: Number, required: true },
+  productQuantity: { type: Number, required: true },
   email: { type: String, required: true },
 });
 
@@ -25,43 +26,44 @@ const getProductById = (id) => {
   const product = Products.findById(id);
   return product;
 };
+const getProductsByArrOfId = (arrId) => {
+  const product = Products.find({ arrId });
+  return product;
+};
 
 const getAllProductsByUser = (email) => {
   const productsByUser = Products.find(email);
   return productsByUser;
 };
 
-///////////////////////////////
-//befor chnge when you add product to add also email  of user created to array in useres modol
-const insertProduct = (productName, productPrice, email) => {
-  const product = new Products({ productName, productPrice, email });
-  // console.log("produuuuct", product._id);
-  // const sendIdToUsersMOdole = usersModole.addProductIdToUser(
-  //   product._id,
-  //   email
-  // );
+const decreaseProductQuantity = (id, productQuantity) => {
+  const product = Products.findByIdAndUpdate(id, { productQuantity });
+
+  return product;
+};
+
+const insertProduct = (productName, productPrice, productQuantity, email) => {
+  const product = new Products({
+    productName,
+    productPrice,
+    productQuantity,
+    email,
+  });
 
   return product.save();
 };
 
-// const insertProduct = (productName, productPrice, email) => {
-//   const product = new Products({ productName, productPrice, email });
-//   return product.save();
-// };
-///////////////////////////////
-//befor chnge when you add product to add also email  of user created to array in useres modol
-
 const removeProduct = (_id) => {
-  // const product = Products.findById(_id);
   const product = Products.findByIdAndDelete(_id);
 
   return product;
 };
 
-const editProduct = (_id, productName, productPrice) => {
+const editProduct = (_id, productName, productPrice, productQuantity) => {
   const product = Products.findByIdAndUpdate(_id, {
     productName,
     productPrice,
+    productQuantity,
   });
   return product;
 };
@@ -84,7 +86,6 @@ const searchProductByName = (productToSearch, i) => {
   const product = Products.find({
     productName: {
       $eq: productToSearch,
-      // .productName,
     },
   }).collation({ locale: "en", strength: 2 });
   return product;
@@ -101,4 +102,6 @@ module.exports = {
   filteredProductsByMinPrice,
   searchProductByName,
   deleteProductsByUser,
+  decreaseProductQuantity,
+  getProductsByArrOfId,
 };
