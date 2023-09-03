@@ -64,9 +64,14 @@ router.put("/addIdOfPruductByUserCreator", async (rea, res) => {
 router.delete("/removeUser", async (req, res) => {
   try {
     const id = req.query.id;
+    const userEmail = req.query.email;
 
     const userToRemove = await usersModule.deleteUser(id);
     if (userToRemove) {
+      const removeAllLikesByUser = await productsModel.removeAllLikesByUser(
+        userEmail
+      );
+
       res.json(new BaseMsg(BaseMsg.STATUSES.Success, "users removed"));
     } else {
       res.json(new BaseMsg(BaseMsg.STATUSES.Failed, "didnt find id "));
@@ -86,6 +91,10 @@ router.delete("/removeUserByMail", async (req, res) => {
       const id = findIdOfEmail[0]._id;
       const userToRemove = await usersModule.deleteUser(id);
       if (userToRemove) {
+        const removeAllLikesByUser = await productsModel.removeAllLikesByUser(
+          email
+        );
+
         res.json(new BaseMsg(BaseMsg.STATUSES.Success, "users removed"));
       } else {
         res.json(new BaseMsg(BaseMsg.STATUSES.Failed, "didnt find id "));
@@ -101,7 +110,7 @@ router.get("/showLikedProductsByUser", async (req, res) => {
     const loggedInUser = req.query.email;
     const likedProducts = await usersModule.selectUserByMail(loggedInUser);
     const arrOfLikedProducts = likedProducts[0].likedProducts;
-    res.json(arrOfLikedProducts.map((arr) => arr.productId));
+    res.json(arrOfLikedProducts);
   } catch (err) {
     console.log("err", err);
     res.json(err);

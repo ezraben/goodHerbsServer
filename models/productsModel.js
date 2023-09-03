@@ -8,6 +8,7 @@ const productsSchema = new Schema({
   productPrice: { type: Number, required: true },
   productQuantity: { type: Number, required: true },
   email: { type: String, required: true },
+  whoLikedProduct: { type: Array, required: true },
 });
 
 const Products = mongoose.model("Products", productsSchema);
@@ -91,6 +92,25 @@ const searchProductByName = (productToSearch, i) => {
   return product;
 };
 
+const pushToWhoLikeProduct = async (productId, whoLiked) => {
+  return Products.updateOne(
+    { _id: productId },
+    { $push: { whoLikedProduct: { email: whoLiked } } }
+  );
+};
+const removeFromWhoLikeProduct = async (productId, whoLiked) => {
+  return Products.updateOne(
+    { _id: productId },
+    { $pull: { whoLikedProduct: { email: whoLiked } } }
+  );
+};
+
+const removeAllLikesByUser = async (userEmail) => {
+  return Products.updateMany({
+    $pull: { whoLikedProduct: { email: userEmail } },
+  });
+};
+
 module.exports = {
   insertProduct,
   removeProduct,
@@ -104,4 +124,7 @@ module.exports = {
   deleteProductsByUser,
   decreaseProductQuantity,
   getProductsByArrOfId,
+  pushToWhoLikeProduct,
+  removeFromWhoLikeProduct,
+  removeAllLikesByUser,
 };

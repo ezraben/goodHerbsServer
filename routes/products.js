@@ -6,6 +6,10 @@ const productsModel = require("../models/productsModel");
 const productsValidation = require("../validation/productValidation");
 
 const usersModel = require("../models/usersModel");
+const addUserToWhoLikeProductMiddleware = require("../middlware/addUserToWhoLikeProductMiddlware");
+const showToAdminWhoLikedProduct = require("../middlware/getWhoLikedProduct");
+
+const removeUserFromWhoLikeProduct = require("../middlware/removeUserFromWhoLikeProduct");
 
 router.get("/", async (req, res) => {
   try {
@@ -32,7 +36,7 @@ router.get("/findProductById", async (req, res) => {
 router.get("/allProductsByUser", async (req, res) => {
   try {
     const email = req.query;
-    // console.log("email", email);
+
     const productsByUser = await productsModel.getAllProductsByUser(email);
     console.log("productsByUser", productsByUser);
 
@@ -62,8 +66,6 @@ router.delete("/deleteProductsByUserForDelete", async (req, res) => {
   }
 });
 
-///////////////////////////////
-//befor chnge when you add product to add also email  of user created to array in useres modol
 router.post("/addProduct", async (req, res) => {
   try {
     const validatedValue = await productsValidation.validateProductSchema(
@@ -77,10 +79,7 @@ router.post("/addProduct", async (req, res) => {
         validatedValue.email
       );
 
-      const user = await usersModel.addProductToUsersArr(
-        // validatedValue.email,
-        validatedValue
-      );
+      const user = await usersModel.addProductToUsersArr(validatedValue);
 
       console.log("products", user);
 
@@ -170,7 +169,7 @@ router.put("/editProduct", async (req, res) => {
 
 router.post("/filterProductByMaxPrice", async (req, res) => {
   try {
-    const priceToFilter = req.body.price;
+    const priceToFilter = req.body.productMaxPrice;
     const productsFiltered = await productsModel.filterProductByMaxPrice(
       priceToFilter
     );
@@ -183,7 +182,7 @@ router.post("/filterProductByMaxPrice", async (req, res) => {
 
 router.post("/filterProductByMinPrice", async (req, res) => {
   try {
-    const priceToFilter = req.body.price;
+    const priceToFilter = req.body.productMinPrice;
     const productByMinPrice = await productsModel.filteredProductsByMinPrice(
       priceToFilter
     );
@@ -246,7 +245,61 @@ router.put(`/removeLikedProductByUser`, async (req, res) => {
       productId
     );
     console.log("addProduct", addProduct);
+    if (addProduct) {
+      await removeUserFromWhoLikeProduct.removeUserFromWhoLikeProduct(
+        userEmail,
+        productId
+      );
+    }
     res.json(addProduct);
+  } catch (err) {
+    console.log("err", err);
+    res.json(err);
+  }
+});
+
+router.put(`/addUserToWhoLikeProduct`, async (req, res) => {
+  try {
+    const productId = req.query.id;
+    const userWhoLike = req.query.email;
+    const product = await productsModel.getProductById(productId);
+    if (product) {
+      const addToWhoLikeArr =
+        addUserToWhoLikeProductMiddleware.addUserToWhoLikedProject(
+          productId,
+          userWhoLike,
+          product
+        );
+
+      if (addToWhoLikeArr) {
+        addToWhoLikeArr
+          .then((data) => {
+            console.log("data", data);
+            res.json(data);
+          })
+          .catch((err) => {
+            console.log("err", err);
+            res.json(err);
+          });
+      }
+    }
+    if (!product) {
+      res.json(new BaseMsg(BaseMsg.STATUSES.Failed, "cant find the product"));
+    }
+  } catch (err) {
+    console.log("err", err);
+    res.json(err);
+  }
+});
+
+router.get(`/showToAdminWhoLikedProduct`, async (req, res) => {
+  try {
+    const email = req.query.userEmail;
+
+    const showWhoLikedProduct =
+      await showToAdminWhoLikedProduct.getWhoLikedProductByUser(email);
+
+    res.json(showWhoLikedProduct);
   } catch (err) {
     console.log("err", err);
     res.json(err);
